@@ -9,6 +9,7 @@ import json
 import sys, getopt
 import platform
 import collections
+import common_utils
 
 ##-----------------------enter port------------------------------
 # main entry for receive input args to determine execute which patten
@@ -25,7 +26,7 @@ def main(argv=None):
         print('[options] -i : The interval of requests, unit - (s), the default value is 2 seconds')
         print('[options] -t: The request times, the default value is 3 times')
         print('\n')
-        print('Good Luck!')
+
 
 
     for op, value in opts:
@@ -40,7 +41,9 @@ def main(argv=None):
     export_file_h = create_result_file(output_path, "sys_check_", 'txt')
 
     # print('正在进行数据采集，请耐心等待......')
-    print(printSplitLine('正在进行数据采集，请耐心等待......'))
+    file = open(export_file_h, 'a+')
+
+
     stats = write_simple_system_statistics(times, interval)
 
     json_file_write_format(export_file_p, stats)
@@ -98,16 +101,16 @@ def compute_average(list):
 
 def write_system_common_info(stats):
     result = ""
-    result += "登陆用户: "
+    result += "Login User: "
     result += str(stats['user'])
     result += '    '
-    result += "登陆时间: "
+    result += "Login Time: "
     result += str(stats['boot_time'])
     result += '    '
-    result += "采集时间: "
+    result += "Collection Time: "
     result += str(stats['coll_time'])
     result += "\n"
-    result += "操作系统版本: " + platform.platform()
+    result += "OS Version: " + platform.platform()
     return result
 
 def cpu_common_info(stats):
@@ -115,44 +118,44 @@ def cpu_common_info(stats):
     cpu_count_l = str(psutil.cpu_count())
     cpu_count_p = str(psutil.cpu_count(logical=False))
 
-    result = '逻辑cpu核数 ：'+ cpu_count_l
+    result = 'Logic Cpu Cores ：'+ cpu_count_l
     result += '\n'
-    result += '物理cpu核数 ：'+ cpu_count_p
+    result += 'Physic Cpu Cores ：'+ cpu_count_p
     result += '\n'
-    result += "cpu使用率均值："
+    result += "CPU Use % Mean ："
     result += str(stats['cpu_mean']) + "%"
     return result
 
 def mem_common_info(stats):
     result = ""
-    result += '内存总量: '
+    result += 'Total Memory : '
     result += "%.2f" % float(psutil.virtual_memory()[0]/ 1024 / 1024)
     result += "M"
     result += "\n"
-    result += '虚拟内存总量: '
+    result += 'Total Virtual Memory : '
     result += str(psutil.swap_memory()[0]/ 1024 / 1024)
     result += "M"
     result += "\n"
-    result += '物理内存使用占比均值: '
+    result += 'Physic Memory Use % Mean : '
     result += str(stats['mem_mean']) + "%"
     return result
 
 def disk_common_info(stats):
     result = ""
-    result += '监测硬盘总量: '
+    result += 'Disk Size : '
     result += "%.2f" % float(psutil.disk_usage('/')[0] / 1024 / 1024 / 1024)
     result += "G"
     result += "\n"
-    result += '硬盘使用占比均值: '
+    result += 'Disk Use % Mean : '
     result += str(stats['disk_mean']) + "%"
     return result
 
 def net_common_info(stats):
     result = ""
-    result += '网络发送数据包均值: '
+    result += 'Net Send Packages Mean : '
     result += str(stats['net_ps_mean'])
     result += "\n"
-    result += '网络接收数据包均值: '
+    result += 'Net Receive Packages Mean : '
     result += str(stats['net_pr_mean'])
     return result
 
@@ -225,11 +228,12 @@ def print_sub_title(sub_title, content):
 
 def generate_txt_statistics(export_file_h, stats):
     file_h = open(export_file_h, 'a+')
-    print_file_write_format(file_h, print_sub_title("系统基本信息:", write_system_common_info(stats)))
-    print_file_write_format(file_h, print_sub_title("cpu：", cpu_common_info(stats['sta'])))
-    print_file_write_format(file_h, print_sub_title("内存：", mem_common_info(stats['sta'])))
-    print_file_write_format(file_h, print_sub_title("硬盘：", disk_common_info(stats['sta'])))
-    print_file_write_format(file_h, print_sub_title("网络：", net_common_info(stats['sta'])))
+    common_utils.print_file_write_format(file_h, '---------------------------------Start collect system statistics data------------------------------\n')
+    print_file_write_format(file_h, common_utils.print_sub_title("OS base Info :", write_system_common_info(stats)))
+    print_file_write_format(file_h, common_utils.print_sub_title("CPU ：", cpu_common_info(stats['sta'])))
+    print_file_write_format(file_h, common_utils.print_sub_title("Memory ：", mem_common_info(stats['sta'])))
+    print_file_write_format(file_h, common_utils.print_sub_title("Disk ：", disk_common_info(stats['sta'])))
+    print_file_write_format(file_h, common_utils.print_sub_title("Net IO ：", net_common_info(stats['sta'])))
     file_h.close()
 
 def json_file_write_format(export_file, input_str):

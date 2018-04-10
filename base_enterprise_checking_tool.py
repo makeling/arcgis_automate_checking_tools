@@ -4,6 +4,7 @@
 
 import os,sys,time,json,random, getopt
 import common_utils
+import wmts_utils
 
 
 ##-----------------------enter port------------------------------
@@ -114,6 +115,7 @@ def main(argv=None):
 # check if input user could login enterprise portal.
 def check_login(export_file_h, url, username, password):
     file = open(export_file_h, 'a+')
+    common_utils.print_file_write_format(file, '---------------------------------Base Enterprise platform checking start--------------------------------')
     common_utils.print_file_write_format(file, common_utils.print_sub_title("1 checking login status",""))
     tokenurl, result= generate_token(url, username, password)
     common_utils.print_file_write_format(file, "checking url: " + tokenurl)
@@ -330,21 +332,24 @@ def random_check_hosting_feature_service(export_file_h, token, service_list, num
 
 
 def request_feature_service_query(url, token):
-    l = len(url)
+    try:
+        l = len(url)
 
-    where = "objectid < 100"
+        where = "objectid < 100"
 
-    if(url[l-2:l] == '/0'):
-        request_url = url + '/query'
-        params = {'f': 'json', 'where': where}
-    else:
-        request_url = url + '/0/query'
-        params = {'f': 'json', 'token': token, 'where': where}
+        if(url[l-2:l] == '/0'):
+            request_url = url + '/query'
+            params = {'f': 'json', 'where': where}
+        else:
+            request_url = url + '/0/query'
+            params = {'f': 'json', 'token': token, 'where': where}
 
 
-    r = common_utils.submit_post_request(request_url, params)
+        r = common_utils.submit_post_request(request_url, params)
 
-    return request_url, r
+        return request_url, r
+    except:
+        return "",None
 
 
 ##----------------------checking scene service-------------------------------
@@ -356,13 +361,16 @@ def random_check_scene_service(export_file_h, token, service_list, nums):
 
 
 def request_scene_service_query(url, token):
-    request_url = url
+    try:
+        request_url = url
 
-    params = {'f': 'json', 'token': token}
+        params = {'f': 'json', 'token': token}
 
-    r = common_utils.submit_post_request(request_url, params)
+        r = common_utils.submit_post_request(request_url, params)
 
-    return request_url, r
+        return request_url, r
+    except:
+        return "",None
 
 ##----------------------checking map service---------------------------------
 def random_check_map_service(export_file_h, token, service_list, nums):
@@ -410,26 +418,32 @@ def generate_random_bbox(bbox):
 
 # request get initial extents
 def get_initialExtents(url,token):
-    params = {'f': 'json'}
+    try:
+        params = {'f': 'json'}
 
-    item = 'initialExtent'
+        item = 'initialExtent'
 
-    result = common_utils.submit_post_request(url,params,item)
+        result = common_utils.submit_post_request(url,params,item)
 
-    return result[1]
+        return result[1]
+    except:
+        return None
 
 def request_map_service_query(url, token):
-    request_url = url + '/export'
-    bbox = get_initialExtents(url, token)
+    try:
+        request_url = url + '/export'
+        bbox = get_initialExtents(url, token)
 
-    if bbox == 'failed':
-        return
+        if bbox == 'failed':
+            return
 
-    else:
-        random_bbox = generate_random_bbox(bbox)
-        params = {'f': 'json','format':'png','transparent':False,'bbox':random_bbox}
-        r = common_utils.submit_post_request(request_url, params)
-        return request_url, r
+        else:
+            random_bbox = generate_random_bbox(bbox)
+            params = {'f': 'json','format':'png','transparent':False,'bbox':random_bbox}
+            r = common_utils.submit_post_request(request_url, params)
+            return request_url, r
+    except:
+        return "", None
 
 
 ##----------------------checking wmts----------------------------------------
@@ -441,13 +455,18 @@ def random_check_wmts_service(export_file_h, token, service_list, nums):
 
 
 def request_wmts_service_query(url, token):
-    request_url = str(url).replace('{level}', "1").replace('{row}', "1").replace('{col}', "1")
+    try:
+        level, row, col = wmts_utils.generate_random_test_lrc(url)
 
-    params = {'f': 'json'}
+        request_url = str(url).replace('{level}', level).replace('{row}', row).replace('{col}', col)
 
-    r = common_utils.submit_get_request_img(request_url, params)
+        params = {'f': 'json'}
 
-    return request_url, r
+        r = common_utils.submit_get_request_img(request_url, params)
+
+        return request_url, r
+    except:
+        return url, None
 
 
 ##----------------------common methods-----------------------------
@@ -501,14 +520,15 @@ def random_checking_services(export_file_h, token, service_list,seq, nums):
 
         response_time = result[0]
 
-        if result[1] != "failed":
-            common_utils.print_file_write_format(file, "response time: " + response_time)
-            common_utils.print_file_write_format(file, "response result: " + str(result[1]))
-            common_utils.print_file_write_format(file, "checking passed!")
-            total_time += float(response_time[:-1])
-            request_num += 1
-        else:
-            common_utils.print_file_write_format(file, "checking failed!")
+        if result != None:
+            if result[1] != "failed":
+                common_utils.print_file_write_format(file, "response time: " + response_time)
+                common_utils.print_file_write_format(file, "response result: " + str(result[1]))
+                common_utils.print_file_write_format(file, "checking passed!")
+                total_time += float(response_time[:-1])
+                request_num += 1
+            else:
+                common_utils.print_file_write_format(file, "checking failed!")
 
         common_utils.print_file_write_format(file, "\n")
 

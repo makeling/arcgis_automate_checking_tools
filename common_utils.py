@@ -6,52 +6,7 @@ import requests
 import os,json,sys
 import time
 import collections
-
-
-# get folder list and services list in every folder.
-def get_services_list(export_file, url, token):
-    try:
-        file = open(export_file, 'a+')
-
-        file_write_format(file, printSplitLine('getting full service list'))
-
-        request_url = url + "/admin/services"
-        folders = ['/']
-        params = {'token': token, 'f': 'json'}
-        item = 'folders'
-        result = submit_request(request_url, params, item)
-
-        if result != "failed":
-            for f in result[1]:
-                if str.upper(f) == "SYSTEM" or str.upper(f) == "UTILITIES" or str.upper(f) == "HOSTED":
-                    continue
-                else:
-                    folders.append(f)
-
-        file_write_format(file, "All the folders:" + str(folders))
-
-        services_list = []
-        if folders != None:
-            for folder in folders:
-                if folder == '/':
-                    folder_url = request_url
-                else:
-                    folder_url = request_url + "/" + folder
-                item = 'services'
-                services = submit_request(folder_url, params, item)
-                for i in services[1]:
-                    services_list.append(i)
-        count = len(services_list)
-
-        file_write_format(file, "services_count:" + str(count))
-        file.write("\n")
-
-        file.close()
-        return count, services_list,folders
-    except:
-        file_write_format(file, "get services list failed!")
-        file.close()
-        return
+import math
 
 # method for get the connection parameters from a json file
 def get_server_conns_params(config_file):
@@ -276,4 +231,23 @@ def create_result_file(current_path):
     except:
         print("create the check_results folder or result file failed!")
         return
+
+
+# url = "https://192.168.100.95:6443/arcgis/rest/services/sms/tileTest/MapServer/tile/0/73/105"
+# token= "cOUG1vHWfxG1FV7wo0aBd2tU-x0wYBpa9t0-LI4e8map0JOuN4QpjwzvLGQJ_Hoo"
+#
+# param = {'token':token}
+#
+# r = submit_get_request_img(url, param)
+#
+# print(r)
+
+
+t = 3.2
+
+
+print(math.ceil(t))
+
+
+
 

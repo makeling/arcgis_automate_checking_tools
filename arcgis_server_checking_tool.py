@@ -68,9 +68,6 @@ def main(argv=None):
 
     check_instance_statistics(export_file_h,url,token,full_services_list,int(repair_times))
 
-
-
-
 #check service instance status, then return error list and try to repair by restart service.
 def check_instance_statistics(export_file,url,token,service_list,repair_times):
     try:
@@ -315,6 +312,8 @@ def check_login(export_file_h, url, username, password):
     file = open(export_file_h, 'a+')
     tokenurl, result= generate_token(url, username, password)
 
+    common_utils.print_file_write_format(file, '-------------------------------ArcGIS Server cluster checking start------------------------------')
+
 
     token = result[1]
     response_time = result[0]
@@ -328,7 +327,6 @@ def check_login(export_file_h, url, username, password):
     file.close()
 
     return token
-
 
 # generate token by portal rest api
 def generate_token(url, username, password):

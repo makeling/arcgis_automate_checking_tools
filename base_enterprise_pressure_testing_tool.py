@@ -4,6 +4,7 @@
 
 import os,sys,time,json,random, getopt
 import common_utils
+import wmts_utils
 
 
 ##-----------------------enter port------------------------------
@@ -110,8 +111,12 @@ def check_login(export_file_h, url, username, password):
     tokenurl, result= generate_token(url, username, password)
 
 
+
+
     token = result[1]
     response_time = result[0]
+
+    common_utils.print_file_write_format(file,"-----------------------------Base Enterprise platform testing start------------------------------")
 
     if result[1] != "failed":
         common_utils.print_file_write_format(file, "login success, token: " + token)
@@ -302,13 +307,18 @@ def random_test_wmts_service(export_file_h, token, service_list, nums, interval)
 
 
 def request_wmts_service_query(url, token):
-    request_url = str(url).replace('{level}', "1").replace('{row}', "1").replace('{col}', "1")
+    try:
+        level,row,col = wmts_utils.generate_random_test_lrc(url)
 
-    params = {'f': 'json'}
+        request_url = str(url).replace('{level}', level).replace('{row}', row).replace('{col}', col)
 
-    r = common_utils.submit_get_request_img(request_url, params)
+        params = {'f': 'json'}
 
-    return request_url, r
+        r = common_utils.submit_get_request_img(request_url, params)
+
+        return request_url, r
+    except:
+        return url,None
 
 
 ##----------------------common methods-----------------------------
@@ -359,14 +369,15 @@ def random_testing_services(export_file_h, token, service_list,seq, nums,interva
 
         response_time = result[0]
 
-        if result[1] != "failed":
-            common_utils.print_file_write_format(file, "response time: " + response_time)
-            # common_utils.print_file_write_format(file, "response result: " + str(result[1]))
-            # common_utils.print_file_write_format(file, "checking passed!")
-            total_time += float(response_time[:-1])
-            request_num += 1
-        else:
-            common_utils.print_file_write_format(file, "checking failed!")
+        if result != None:
+            if result[1] != "failed":
+                common_utils.print_file_write_format(file, "response time: " + response_time)
+                # common_utils.print_file_write_format(file, "response result: " + str(result[1]))
+                # common_utils.print_file_write_format(file, "checking passed!")
+                total_time += float(response_time[:-1])
+                request_num += 1
+            else:
+                common_utils.print_file_write_format(file, "checking failed!")
 
         common_utils.print_file_write_format(file, "\n")
         time.sleep(interval)
